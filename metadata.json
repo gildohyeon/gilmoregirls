@@ -1,0 +1,5 @@
+{
+  "name": "English Word Masker",
+  "description": "An interactive language learning app that masks English words and allows users to reveal them one by one, with progress tracking and auto-scrolling.",
+  "requestFramePermissions": []
+}
