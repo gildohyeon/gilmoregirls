@@ -5,7 +5,7 @@ export interface SubtitleItem {
   "Human Translation": string;
 }
 
-export interface Episode {
+export interface EpisodeMetadata {
   id: string;
   name: string;
   data: SubtitleItem[];
@@ -13,6 +13,5 @@ export interface Episode {
 
 export interface AppState {
   currentEpisodeId: string;
-  // Map of episodeId -> sentenceIndex -> wordIndex -> isRevealed
   revealedStates: Record<string, boolean[][]>;
 }
