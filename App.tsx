@@ -20,6 +20,9 @@ const App: React.FC = () => {
   const [revealedStates, setRevealedStates] = useState<Record<string, boolean[][]>>({});
   const [loading, setLoading] = useState(false);
   
+  // 현재 포커스된 문장 인덱스 (스크롤 및 가이드용)
+  const [focusedSentenceIdx, setFocusedSentenceIdx] = useState(0);
+  
   // 리셋 시 UI를 강제로 새로고침하기 위한 키
   const [refreshKey, setRefreshKey] = useState(0);
   
@@ -50,6 +53,7 @@ const App: React.FC = () => {
     setLoading(true);
     setCurrentEpId(ep.id);
     setSubtitleData(ep.data);
+    setFocusedSentenceIdx(0); // 포커스 초기화
     
     // 이 에피소드에 대한 상태가 없으면 초기화(모두 가림)
     if (!revealedStates[ep.id]) {
@@ -69,7 +73,7 @@ const App: React.FC = () => {
 
   const currentStates = currentEpId ? (revealedStates[currentEpId] || []) : [];
 
-  // 4. 리셋 로직: 모든 가리개를 즉시 다시 덮음
+  // 4. 리셋 로직
   const handleReset = () => {
     if (!currentEpId || !subtitleData.length) return;
     
@@ -81,6 +85,7 @@ const App: React.FC = () => {
       return next;
     });
 
+    setFocusedSentenceIdx(0);
     setRefreshKey(prev => prev + 1);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
@@ -94,6 +99,8 @@ const App: React.FC = () => {
       }
       return { ...prev, [currentEpId]: epState };
     });
+    // 단어를 수동으로 클릭하면 해당 문장으로 포커스 이동
+    setFocusedSentenceIdx(sIdx);
   };
 
   const toggleSentence = (sIdx: number) => {
@@ -106,6 +113,7 @@ const App: React.FC = () => {
       }
       return { ...prev, [currentEpId]: epState };
     });
+    setFocusedSentenceIdx(sIdx);
   };
 
   const findNextHidden = useCallback(() => {
@@ -116,16 +124,28 @@ const App: React.FC = () => {
     return null;
   }, [currentStates]);
 
+  // 넥스트 버튼 로직 수정
   const handleRevealNext = () => {
     const next = findNextHidden();
-    if (next) {
-      toggleWord(next.sIdx, next.wIdx);
+    
+    if (!next) {
+      alert("축하합니다! 모든 단어를 확인하셨습니다. 🎉");
+      return;
+    }
+
+    // 1. 현재 포커스된 문장이 이미 끝났거나, 다음 숨겨진 단어가 다음 문장에 있는 경우
+    if (next.sIdx > focusedSentenceIdx) {
+      // 다음 문장으로 화면만 이동 (단어는 아직 공개하지 않음)
+      setFocusedSentenceIdx(next.sIdx);
       setTimeout(() => {
-        // block: 'center' 옵션을 사용하여 현재 문장이 화면 중앙에 오도록 스크롤
         sentenceRefs.current[next.sIdx]?.scrollIntoView({ behavior: 'smooth', block: 'center' });
       }, 50);
     } else {
-      alert("축하합니다! 모든 단어를 확인하셨습니다. 🎉");
+      // 2. 현재 포커스된 문장 내에 숨겨진 단어가 있는 경우 -> 단어 공개
+      toggleWord(next.sIdx, next.wIdx);
+      setTimeout(() => {
+        sentenceRefs.current[next.sIdx]?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }, 50);
     }
   };
 
@@ -204,8 +224,7 @@ const App: React.FC = () => {
           const words = item.Subtitle.trim().split(/\s+/).filter(Boolean);
           const stateRow = currentStates[sIdx] || [];
           const isDone = stateRow.length > 0 && stateRow.every(v => v);
-          const nextTarget = findNextHidden();
-          const isActive = nextTarget?.sIdx === sIdx;
+          const isActive = focusedSentenceIdx === sIdx;
 
           return (
             <section
