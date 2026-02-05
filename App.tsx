@@ -196,6 +196,17 @@ const App: React.FC = () => {
 
   // --- 학습 화면 ---
   const activeEp = EPISODES.find(e => e.id === currentEpId);
+
+  // 진행률 계산
+  const totalWords = subtitleData.reduce((acc, item) => {
+    return acc + item.Subtitle.trim().split(/\s+/).filter(Boolean).length;
+  }, 0);
+
+  const revealedWords = currentStates.reduce((acc, row) => {
+    return acc + row.filter(Boolean).length;
+  }, 0);
+
+  const progress = totalWords === 0 ? 0 : (revealedWords / totalWords) * 100;
   
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col max-w-2xl mx-auto shadow-xl relative border-x border-gray-100">
@@ -217,6 +228,14 @@ const App: React.FC = () => {
         >
           <RotateCcw size={18} />
         </button>
+        
+        {/* 진행률 바 */}
+        <div className="absolute bottom-0 left-0 w-full h-1 bg-gray-200">
+          <div 
+            className="h-full bg-indigo-600 transition-all duration-300 ease-out" 
+            style={{ width: `${progress}%` }}
+          />
+        </div>
       </header>
 
       <main key={refreshKey} className="flex-1 p-4 space-y-4 pb-32">
