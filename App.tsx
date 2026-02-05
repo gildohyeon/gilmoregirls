@@ -121,7 +121,8 @@ const App: React.FC = () => {
     if (next) {
       toggleWord(next.sIdx, next.wIdx);
       setTimeout(() => {
-        sentenceRefs.current[next.sIdx]?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        // block: 'center' 옵션을 사용하여 현재 문장이 화면 중앙에 오도록 스크롤
+        sentenceRefs.current[next.sIdx]?.scrollIntoView({ behavior: 'smooth', block: 'center' });
       }, 50);
     } else {
       alert("축하합니다! 모든 단어를 확인하셨습니다. 🎉");
